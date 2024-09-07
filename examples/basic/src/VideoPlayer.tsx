@@ -1,8 +1,8 @@
 'use strict';
 
-import React, {type FC, useCallback, useRef, useState} from 'react';
+import React, {type FC, useCallback, useRef, useState, useEffect} from 'react';
 
-import {Platform, TouchableOpacity, View} from 'react-native';
+import {Platform, TouchableOpacity, View, StatusBar} from 'react-native';
 
 import Video, {
   VideoRef,
@@ -34,8 +34,9 @@ import Video, {
 } from 'react-native-video';
 import styles from './styles';
 import {type AdditionalSourceInfo} from './types';
-import {bufferConfig, srcList, textTracksSelectionBy} from './constants';
+import {bufferConfig, isAndroid, srcList, textTracksSelectionBy} from './constants';
 import {Overlay, toast, VideoLoader} from './components';
+import * as NavigationBar from 'expo-navigation-bar';
 
 type Props = NonNullable<unknown>;
 
@@ -103,6 +104,12 @@ const VideoPlayer: FC<Props> = ({}) => {
     console.log('channel down');
     goToChannel((srcListId + srcList.length - 1) % srcList.length);
   }, [goToChannel, srcListId]);
+
+  useEffect(() => {
+    if (isAndroid) {
+      NavigationBar.setVisibilityAsync('visible');
+    }
+  }, []);
 
   const onAudioTracks = (data: OnAudioTracksData) => {
     const selectedTrack = data.audioTracks?.find((x: AudioTrack) => {
@@ -226,6 +233,8 @@ const VideoPlayer: FC<Props> = ({}) => {
 
   return (
     <View style={styles.container}>
+      <StatusBar animated={true} backgroundColor="black" hidden={false} />
+
       {(srcList[srcListId] as AdditionalSourceInfo)?.noView ? null : (
         <TouchableOpacity style={viewStyle}>
           <Video
@@ -276,6 +285,7 @@ const VideoPlayer: FC<Props> = ({}) => {
             bufferingStrategy={BufferingStrategyType.DEFAULT}
             debug={{enable: true, thread: true}}
             subtitleStyle={{subtitlesFollowVideo: true}}
+            controlsStyles={{hideNavigationBarOnFullScreenMode: true, hideNotificationBarOnFullScreenMode: true}}
           />
         </TouchableOpacity>
       )}
